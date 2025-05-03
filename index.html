@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Solar System Countdown</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      height: 100%;
+    }
+    #timer {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: red;
+      font-size: 24px;
+      z-index: 100;
+      text-shadow: 0 0 10px rgba(255,0,0,0.5);
+      font-family: 'Arial', sans-serif;
+    }
+    #message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 32px;
+      opacity: 0;
+      text-align: center;
+      z-index: 200;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer">00:00:10</div>
+  <div id="message">It's the 1st of May<br>Today's a special day</div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    let countdown = 10;
+    let scene, camera, renderer, earth, moon, sun;
+    let explosionParticles = [];
+    let explosionStarted = false;
+
+    function init() {
+      // Scene setup
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance"
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      document.body.appendChild(renderer.domElement);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 3, 5);
+      scene.add(directionalLight);
+
+      // Load textures with NPOT handling
+      const textureLoader = new THREE.TextureLoader();
+      
+      // Sun (640x611)
+      const sunTexture = textureLoader.load('sun.jpg', texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      });
+      
+      // Earth (2048x2048)
+      const earthTexture = textureLoader.load('earth.png');
+      
+      // Moon (2580x2453)
+      const moonTexture = textureLoader.load('moon.jpg', texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      });
+
+      // Create celestial bodies
+      createSun(sunTexture);
+      createEarth(earthTexture);
+      createMoon(moonTexture);
+
+      camera.position.set(0, 15, 25);
+      camera.lookAt(0, 0, 0);
+    }
+
+    function createSun(texture) {
+      const geometry = new THREE.SphereGeometry(3, 64, 64);
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        emissive: 0xff8844,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.95
+      });
+      sun = new THREE.Mesh(geometry, material);
+      scene.add(sun);
+    }
+
+    function createEarth(texture) {
+      const geometry = new THREE.SphereGeometry(1, 64, 64);
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        bumpScale: 0.05,
+        specular: 0x222222,
+        shininess: 50
+      });
+      earth = new THREE.Mesh(geometry, material);
+      earth.position.set(10, 0, 0);
+      scene.add(earth);
+    }
+
+    function createMoon(texture) {
+      const geometry = new THREE.SphereGeometry(0.4, 64, 64);
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        bumpScale: 0.01,
+        specular: 0x111111,
+        shininess: 10
+      });
+      moon = new THREE.Mesh(geometry, material);
+      moon.position.set(12, 0, 0);
+      scene.add(moon);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Update celestial body positions
+      const time = Date.now() * 0.001;
+      
+      // Earth revolution and rotation
+      earth.position.x = 10 * Math.cos(time * 0.5);
+      earth.position.z = 10 * Math.sin(time * 0.5);
+      earth.rotation.y += 0.01;
+
+      // Moon revolution and rotation
+      moon.position.x = earth.position.x + 2 * Math.cos(time * 2);
+      moon.position.z = earth.position.z + 2 * Math.sin(time * 2);
+      moon.rotation.y += 0.005;
+
+      // Sun rotation
+      sun.rotation.y += 0.001;
+
+      // Handle explosion particles
+      if (explosionStarted) {
+        explosionParticles.forEach(particle => {
+          particle.position.add(particle.velocity);
+          particle.material.opacity *= 0.97;
+        });
+        explosionParticles = explosionParticles.filter(p => p.material.opacity > 0.01);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function updateTimer() {
+      countdown--;
+      document.getElementById('timer').textContent = 
+        `00:00:${countdown.toString().padStart(2, '0')}`;
+      
+      if (countdown <= 0) {
+        triggerFinalAnimation();
+        return;
+      }
+      setTimeout(updateTimer, 1000);
+    }
+
+    function triggerFinalAnimation() {
+      // Remove celestial bodies
+      scene.remove(sun);
+      scene.remove(earth);
+      scene.remove(moon);
+
+      // Create explosion particles
+      const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+      const particleMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff3300,
+        transparent: true
+      });
+
+      for (let i = 0; i < 500; i++) {
+        const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+        particle.position.set(0, 0, 0);
+        particle.velocity = new THREE.Vector3(
+          (Math.random() - 0.5) * 0.3,
+          (Math.random() - 0.5) * 0.3,
+          (Math.random() - 0.5) * 0.3
+        );
+        scene.add(particle);
+        explosionParticles.push(particle);
+      }
+
+      explosionStarted = true;
+
+      // Show final message and redirect
+      setTimeout(() => {
+        document.getElementById('message').style.opacity = '1';
+        setTimeout(() => {
+          document.getElementById('message').style.transition = 'opacity 2s';
+          document.getElementById('message').style.opacity = '0';
+          setTimeout(() => {
+            // Redirect to Scene2.html after all animations
+            window.location.href = 'Scene2.html';
+          }, 2000);
+        }, 3000);
+      }, 2000);
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Initialize and start
+    init();
+    animate();
+    setTimeout(updateTimer, 1000);
+  </script>
+</body>
+</html>

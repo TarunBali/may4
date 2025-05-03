@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Cake Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #FFF3E0;
+            font-family: 'Comic Neue', cursive;
+            touch-action: manipulation;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #cakeCanvas {
+            width: 300px;
+            height: 400px;
+            background: #FFF8E1;
+            border: 3px solid #6B4423;
+            border-radius: 15px;
+            position: relative;
+            margin: 20px;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 10px;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #6B4423;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            background: white;
+            transition: transform 0.2s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+
+        .layer-btn {
+            background: linear-gradient(#8B572A, #6B4423, #4B2C20);
+            color: white;
+            font-weight: bold;
+        }
+
+        #nameInput {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        #finalMessage {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .save-btn {
+            padding: 12px 24px;
+            background: #6B4423;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .cake-layer {
+            position: absolute;
+            width: 80%;
+            left: 10%;
+            border-radius: 10px;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .decoration {
+            position: absolute;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .selected {
+            box-shadow: 0 0 8px 2px rgba(255, 107, 107, 0.8);
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 2px solid #6B4423;
+            border-radius: 50%;
+            cursor: nwse-resize;
+            display: none;
+            z-index: 10;
+        }
+
+        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .handle-n { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .handle-e { right: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+        .handle-s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .handle-w { left: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+
+        #deleteBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #ff4d4d;
+            border: 2px solid #990000;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        #birthdayText {
+            color: #6B4423;
+            font-size: 24px;
+            text-align: center;
+            margin: 20px;
+        }
+
+        #snapshotContainer {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            background: #FFF8E1;
+            border: 3px solid #6B4423;
+            border-radius: 15px;
+            margin: 20px;
+            overflow: hidden;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>🎂 Create Birthday Cake 🎂</h2>
+    <div id="cakeCanvas"></div>
+    <div class="toolbar">
+        <div class="controls-row">
+            <div class="control-btn layer-btn" id="addLayerBtn">🍰</div>
+            <div class="control-btn" data-type="candle">🕯️</div>
+            <div class="control-btn" data-type="sprinkle">✨</div>
+            <div class="control-btn" data-type="berry">🍓</div>
+            <div class="control-btn" data-type="heart">💖</div>
+        </div>
+    </div>
+    <button id="finishBtn" class="save-btn">Finish Cake! 🎉</button>
+
+    <div id="deleteBtn">❌</div>
+
+    <div id="nameInput">
+        <h3>Enter Birthday Person's Name:</h3>
+        <input type="text" id="birthdayName" style="font-size: 18px; padding: 8px; margin: 10px; width: 200px;">
+        <button id="continueBtn" class="save-btn">Continue</button>
+    </div>
+
+    <div id="finalMessage">
+        <h2 id="birthdayText"></h2>
+        <div id="snapshotContainer"></div>
+        <div class="button-group">
+            <button id="saveImageBtn" class="save-btn">Save Picture 📸</button>
+            <button id="nextSceneBtn" class="save-btn">Next ➡️</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        const cakeCanvas = document.getElementById('cakeCanvas');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        const saveImageBtn = document.getElementById('saveImageBtn');
+        const nextSceneBtn = document.getElementById('nextSceneBtn');
+        
+        let activeElement = null;
+        let selectedElement = null;
+        let startX = 0, startY = 0;
+        let layerColors = ['#8B572A', '#6B4423', '#4B2C20', '#A67C52', '#C4A484'];
+        let layerCount = 0;
+        let initialWidth = 0;
+        let initialHeight = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+        let resizing = false;
+        let activeHandle = null;
+        let currentZIndex = 10;
+
+        // Event Listeners
+        document.getElementById('addLayerBtn').addEventListener('click', addNewLayer);
+        document.querySelectorAll('.control-btn:not(.layer-btn)').forEach(btn => {
+            btn.addEventListener('touchstart', e => addNewDecoration(e, btn.dataset.type));
+            btn.addEventListener('mousedown', e => addNewDecoration(e, btn.dataset.type));
+        });
+        cakeCanvas.addEventListener('mousedown', handleCanvasClick);
+        cakeCanvas.addEventListener('touchstart', handleCanvasClick);
+        deleteBtn.addEventListener('click', deleteSelectedElement);
+        continueBtn.addEventListener('click', showFinalMessage);
+        saveImageBtn.addEventListener('click', saveAsImage);
+        document.getElementById('finishBtn').addEventListener('click', () => {
+            document.querySelectorAll('.control-btn').forEach(btn => btn.style.display = 'none');
+            document.getElementById('finishBtn').style.display = 'none';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('nameInput').style.display = 'block';
+            deselectAll();
+        });
+
+        nextSceneBtn.addEventListener('click', () => {
+            // Save design data to localStorage
+            const designData = {
+                name: document.getElementById('birthdayName').value,
+                snapshot: document.getElementById('snapshotContainer').innerHTML
+            };
+            localStorage.setItem('cakeDesign', JSON.stringify(designData));
+            
+            // Redirect to Scene3.html
+            window.location.href = 'Scene3.html';
+        });
+
+        function handleCanvasClick(e) {
+            if (e.target === cakeCanvas) deselectAll();
+        }
+
+        function addNewLayer() {
+            if (layerCount >= 5) return;
+            const color = layerColors[layerCount % layerColors.length];
+            const layer = document.createElement('div');
+            layer.className = 'cake-layer';
+            layer.style.backgroundColor = color;
+            layer.style.height = '60px';
+            layer.style.zIndex = 10;
+
+            const existingLayers = document.querySelectorAll('.cake-layer');
+            if (existingLayers.length === 0) {
+                layer.style.bottom = '10%';
+            } else {
+                let highestBottom = 0;
+                let highestHeight = 0;
+                existingLayers.forEach(existingLayer => {
+                    const bottom = parseInt(existingLayer.style.bottom) || 0;
+                    const height = parseInt(existingLayer.style.height) || 0;
+                    if (bottom + height > highestBottom + highestHeight) {
+                        highestBottom = bottom;
+                        highestHeight = height;
+                    }
+                });
+                layer.style.bottom = `${highestBottom + highestHeight + 5}px`;
+            }
+            
+            cakeCanvas.appendChild(layer);
+            layerCount++;
+            makeLayerDraggable(layer);
+            addResizeHandles(layer);
+            selectElement(layer);
+        }
+
+        function addResizeHandles(element) {
+            const positions = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+            positions.forEach(pos => {
+                const handle = document.createElement('div');
+                handle.className = `resize-handle handle-${pos}`;
+                handle.dataset.position = pos;
+                element.appendChild(handle);
+                handle.addEventListener('touchstart', startResize);
+                handle.addEventListener('mousedown', startResize);
+            });
+        }
+
+        function startResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!selectedElement) return;
+            
+            resizing = true;
+            activeHandle = e.target.dataset.position;
+            initialWidth = selectedElement.offsetWidth;
+            initialHeight = selectedElement.offsetHeight;
+            initialLeft = parseInt(selectedElement.style.left) || 0;
+            initialTop = parseInt(selectedElement.style.top) || 0;
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            document.addEventListener('touchmove', handleResize);
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('touchend', endResize);
+            document.addEventListener('mouseup', endResize);
+        }
+
+        function handleResize(e) {
+            if (!resizing || !selectedElement || !activeHandle) return;
+            
+            const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+            const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            const canvasRect = cakeCanvas.getBoundingClientRect();
+            const canvasWidth = canvasRect.width;
+            
+            if (selectedElement.classList.contains('cake-layer')) {
+                const minWidth = canvasWidth * 0.3;
+                const maxWidth = canvasWidth * 0.9;
+                const minHeight = 20;
+                const maxHeight = 100;
+                let newWidth = initialWidth;
+                let newHeight = initialHeight;
+
+                if (activeHandle.includes('e')) newWidth = Math.max(minWidth, Math.min(maxWidth, initialWidth + deltaX));
+                if (activeHandle.includes('w')) newWidth = Math.max(minWidth, Math.min(maxWidth, initialWidth - deltaX));
+                if (activeHandle.includes('n')) newHeight = Math.max(minHeight, Math.min(maxHeight, initialHeight - deltaY));
+                if (activeHandle.includes('s')) newHeight = Math.max(minHeight, Math.min(maxHeight, initialHeight + deltaY));
+
+                selectedElement.style.width = `${newWidth}px`;
+                selectedElement.style.height = `${newHeight}px`;
+                selectedElement.style.left = `${(canvasWidth - newWidth)/2}px`;
+            } 
+            else if (selectedElement.classList.contains('decoration')) {
+                const minSize = 16;
+                const maxSize = 72;
+                let newSize = parseInt(selectedElement.style.fontSize) || 24;
+                
+                if (activeHandle.includes('e')) newSize += deltaX * 0.25;
+                if (activeHandle.includes('w')) newSize -= deltaX * 0.25;
+                if (activeHandle.includes('n')) newSize -= deltaY * 0.25;
+                if (activeHandle.includes('s')) newSize += deltaY * 0.25;
+                
+                selectedElement.style.fontSize = `${Math.max(minSize, Math.min(maxSize, newSize))}px`;
+            }
+        }
+
+        function endResize() {
+            resizing = false;
+            activeHandle = null;
+            document.removeEventListener('touchmove', handleResize);
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('touchend', endResize);
+            document.removeEventListener('mouseup', endResize);
+        }
+
+        function addNewDecoration(e, type) {
+            e.preventDefault();
+            const decor = document.createElement('div');
+            decor.className = 'decoration';
+            decor.textContent = e.target.textContent;
+            decor.style.fontSize = '24px';
+            decor.style.zIndex = 50;
+            
+            const rect = cakeCanvas.getBoundingClientRect();
+            decor.style.left = `${rect.width/2 - 15}px`;
+            decor.style.top = `${rect.height/2 - 15}px`;
+            
+            cakeCanvas.appendChild(decor);
+            makeDecorationDraggable(decor);
+            addResizeHandles(decor);
+            selectElement(decor);
+        }
+
+        function makeLayerDraggable(layer) {
+            layer.addEventListener('touchstart', startDrag);
+            layer.addEventListener('mousedown', startDrag);
+        }
+
+        function makeDecorationDraggable(element) {
+            element.addEventListener('touchstart', startDrag);
+            element.addEventListener('mousedown', startDrag);
+        }
+
+        function startDrag(e) {
+            if (e.target.classList.contains('resize-handle')) return;
+            activeElement = e.target.closest('.cake-layer, .decoration');
+            if (!activeElement) return;
+            
+            selectElement(activeElement);
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = activeElement.getBoundingClientRect();
+            startX = touch.clientX - rect.left;
+            startY = touch.clientY - rect.top;
+            
+            document.addEventListener('touchmove', moveDrag);
+            document.addEventListener('mousemove', moveDrag);
+            document.addEventListener('touchend', stopDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function moveDrag(e) {
+            if (!activeElement || resizing) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = cakeCanvas.getBoundingClientRect();
+            const newX = touch.clientX - rect.left - startX;
+            const newY = touch.clientY - rect.top - startY;
+
+            if (activeElement.classList.contains('cake-layer')) {
+                activeElement.style.bottom = `${rect.height - newY - activeElement.offsetHeight}px`;
+                activeElement.style.left = `${(rect.width - activeElement.offsetWidth)/2}px`;
+            } else {
+                activeElement.style.left = `${Math.max(0, Math.min(newX, rect.width - activeElement.offsetWidth))}px`;
+                activeElement.style.top = `${Math.max(0, Math.min(newY, rect.height - activeElement.offsetHeight))}px`;
+            }
+        }
+
+        function stopDrag() {
+            activeElement = null;
+            document.removeEventListener('touchmove', moveDrag);
+            document.removeEventListener('mousemove', moveDrag);
+            document.removeEventListener('touchend', stopDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function selectElement(element) {
+            deselectAll();
+            selectedElement = element;
+            selectedElement.classList.add('selected');
+            selectedElement.querySelectorAll('.resize-handle').forEach(h => h.style.display = 'block');
+            updateZIndex(element);
+            deleteBtn.style.display = 'flex';
+        }
+        
+        function updateZIndex(element) {
+            currentZIndex++;
+            if (element.classList.contains('decoration')) {
+                element.style.zIndex = currentZIndex;
+            } else {
+                let highestZ = 10;
+                document.querySelectorAll('.cake-layer').forEach(l => {
+                    highestZ = Math.max(highestZ, parseInt(l.style.zIndex));
+                });
+                element.style.zIndex = highestZ + 1;
+            }
+        }
+
+        function deselectAll() {
+            document.querySelectorAll('.selected').forEach(el => {
+                el.classList.remove('selected');
+                el.querySelectorAll('.resize-handle').forEach(h => h.style.display = 'none');
+            });
+            selectedElement = null;
+            deleteBtn.style.display = 'none';
+        }
+
+        function deleteSelectedElement() {
+            if (selectedElement) {
+                if (selectedElement.classList.contains('cake-layer')) layerCount--;
+                selectedElement.remove();
+                deselectAll();
+            }
+        }
+
+        function showFinalMessage() {
+            const name = document.getElementById('birthdayName').value;
+            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('cakeCanvas').style.display = 'none';
+            document.getElementById('finalMessage').style.display = 'flex';
+            document.getElementById('birthdayText').innerHTML = 
+                `Happy Birthday<br><span style="color: #FF6B6B;">${name || 'Dear Friend'}</span>! 🎉`;
+
+            const snapshot = document.getElementById('snapshotContainer');
+            snapshot.innerHTML = '';
+            Array.from(cakeCanvas.children).forEach(element => {
+                const clone = element.cloneNode(true);
+                clone.querySelectorAll('.resize-handle').forEach(h => h.remove());
+                clone.classList.remove('selected');
+                snapshot.appendChild(clone);
+            });
+        }
+
+        async function saveAsImage() {
+            try {
+                const canvas = await html2canvas(document.getElementById('snapshotContainer'), {
+                    scale: 2,
+                    backgroundColor: '#FFF8E1'
+                });
+                const link = document.createElement('a');
+                link.download = 'birthday-card.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch (error) {
+                alert('Error saving image. Please try again!');
+            }
+        }
+    </script>
+</body>
+</html>

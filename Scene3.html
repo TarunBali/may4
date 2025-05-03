@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Birthday Cake Animation</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: 'Arial', sans-serif;
+      }
+      @keyframes gradientBG {
+        0% { background-position: 0% 50% }
+        50% { background-position: 100% 50% }
+        100% { background-position: 0% 50% }
+      }
+      .container {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+        max-width: 31.25em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .center {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .layer-1, .layer-2, .layer-3, .candle {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+      }
+      .layer-1 {
+        background-color: #367bd0;
+        height: 7.5em;
+        width: 21.87em;
+        top: -7.5em;
+        background-size: 1.56em 9.37em;
+        background-position: 0 -1.25em;
+        background-image: radial-gradient(
+          circle at 0.78em 1em,
+          #f5f5f5 1.25em,
+          transparent 1.3em
+        );
+        animation: fall-1 4s forwards;
+        z-index: 1;
+      }
+      @keyframes fall-1 {
+        0% {
+          transform: translateY(0);
+        }
+        20% {
+          transform: translateY(35.62em);
+        }
+        100% {
+          transform: translateY(35.62em);
+        }
+      }
+      .layer-1:before {
+        content: "";
+        position: absolute;
+        height: 1.25em;
+        width: 100%;
+        background-color: #f54597;
+        bottom: 0;
+      }
+      .layer-1:after {
+        content: "";
+        position: absolute;
+        height: 0.75em;
+        width: 0.75em;
+        background-color: #9a152b;
+        border-radius: 50%;
+        top: 2.81em;
+        left: 1.87em;
+        box-shadow: 3.12em 1.56em #f1663e, 5.31em -1em #f5e671, 9.37em 2.4em #9a152b,
+          12.5em -1.56em #f1663e, 14.68em 0 #f5e671, 18.75em 1.56em #9a152b;
+      }
+      .layer-2 {
+        height: 7.5em;
+        width: 15.62em;
+        background-color: #ff99b9;
+        top: -7.5em;
+        background-image: repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 3.12em,
+          #ff4a83 3.12em,
+          #ff4a83 6.25em
+        );
+        animation: fall-2 4s forwards;
+        z-index: 2;
+      }
+      @keyframes fall-2 {
+        0% {
+          transform: translateY(0);
+        }
+        20% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(28.12em);
+        }
+        100% {
+          transform: translateY(28.12em);
+        }
+      }
+      .layer-3 {
+        background-color: #9a202f;
+        height: 7.5em;
+        width: 9.37em;
+        top: -7.5em;
+        background-size: 1.56em 9.37em;
+        background-position: 0 -1.25em;
+        background-image: radial-gradient(
+          circle at 0.78em 1em,
+          #ffee8d 1.25em,
+          transparent 1.3em
+        );
+        animation: fall-3 4s forwards;
+        z-index: 3;
+      }
+      @keyframes fall-3 {
+        0% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(0);
+        }
+        60% {
+          transform: translateY(20.62em);
+        }
+        100% {
+          transform: translateY(20.62em);
+        }
+      }
+      .layer-3:before {
+        position: absolute;
+        content: "";
+        height: 0.93em;
+        width: 100%;
+        top: 3.12em;
+        background-color: #ffee8d;
+      }
+      .layer-3:after {
+        position: absolute;
+        content: "";
+        background-color: #f54597;
+        height: 1.25em;
+        width: 1.25em;
+        border-radius: 50%;
+        top: -1.25em;
+        left: 0.37em;
+        box-shadow: 1.87em 0 #f54597, 3.75em 0 #f54597, 5.62em 0 #f54597,
+          7.5em 0 #f54597;
+      }
+      .candle {
+        height: 3.12em;
+        width: 0.75em;
+        background: linear-gradient(to right, #3aa2cf, #87ceeb, #3aa2cf);
+        top: -3.12em;
+        border-radius: 0.12em 0.12em 0 0;
+        animation: fall-4 4s forwards;
+        cursor: pointer;
+        z-index: 4;
+        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      }
+      @keyframes fall-4 {
+        0% {
+          transform: translateY(0);
+        }
+        60% {
+          transform: translateY(0);
+        }
+        80% {
+          transform: translateY(13.12em);
+        }
+        100% {
+          transform: translateY(13.12em);
+        }
+      }
+
+      /* MODIFIED CANDLE FLAME */
+      .flame {
+        position: absolute;
+        width: 1.8em;
+        height: 3em;
+        top: -3.2em;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 50% 50% 40% 40%;
+        background: linear-gradient(to bottom, 
+            rgba(255, 240, 160, 0.9) 0%,
+            rgba(255, 140, 60, 0.8) 40%,
+            rgba(220, 70, 0, 0.6) 70%,
+            transparent 100%
+        );
+        filter: blur(0.4em);
+        animation: flameFlicker 0.08s infinite;
+        box-shadow: 
+            0 0 1.5em rgba(255, 160, 60, 0.6),
+            0 0 3em rgba(255, 100, 50, 0.4),
+            0 0 5em rgba(255, 50, 0, 0.3);
+        mix-blend-mode: screen;
+        opacity: 0.95;
+      }
+
+      @keyframes flameFlicker {
+        0%, 100% { transform: translateX(-50%) scale(0.98, 1.02) rotate(0.5deg); }
+        25% { transform: translateX(-50%) scale(1.02, 0.98) rotate(-0.5deg); }
+        50% { transform: translateX(-50%) scale(0.95, 1.05) rotate(1deg); }
+        75% { transform: translateX(-50%) scale(1.05, 0.95) rotate(-1deg); }
+      }
+
+      .flame::before {
+        content: '';
+        position: absolute;
+        width: 120%;
+        height: 120%;
+        top: -10%;
+        left: -10%;
+        background: radial-gradient(circle at center, 
+            rgba(255, 255, 255, 0.5) 0%,
+            rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        animation: flameGlow 1.5s infinite;
+      }
+
+      @keyframes flameGlow {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.7; }
+      }
+
+      .flame.extinguish {
+        animation: extinguishFlame 1.5s forwards;
+      }
+
+      @keyframes extinguishFlame {
+        0% { opacity: 1; transform: translateX(-50%) scale(1); }
+        100% { opacity: 0; transform: translateX(-50%) scale(0) translateY(-5em); }
+      }
+
+      .smoke {
+        position: absolute;
+        background: rgba(100, 100, 100, 0.3);
+        border-radius: 50%;
+        filter: blur(0.3em);
+        animation: smokeRise 3s linear forwards;
+      }
+
+      @keyframes smokeRise {
+        to { transform: translate(0, -10em) scale(3); opacity: 0; }
+      }
+
+      .black-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        opacity: 0;
+        transition: opacity 1s ease;
+        pointer-events: none;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      .black-screen.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .birthday-title {
+        color: #ff0000;
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 1s ease, transform 1s ease;
+        transition-delay: 0.8s;
+      }
+      .birthday-message {
+        color: #ffaa00;
+        font-size: 1.5rem;
+        max-width: 80%;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 1s ease, transform 1s ease;
+        transition-delay: 1.2s;
+      }
+      .black-screen.active .birthday-title,
+      .black-screen.active .birthday-message {
+        opacity: 1;
+        transform: translateY(0);
+      }
+	  #instruction {
+  position: fixed;
+  bottom: 2em;
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  color: #ffffff;
+  z-index: 10;
+  font-family: Arial, sans-serif;
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="container center">
+      <div class="candle">
+        <div class="flame"></div>
+      </div>
+      <div class="layer-1"></div>
+      <div class="layer-2"></div>
+      <div class="layer-3"></div>
+    </div>	  
+	<h5 id="instruction">Click the candle to blow it out</h5>
+    <div class="black-screen">
+      <h1 class="birthday-title">HAPPY BIRTHDAY!</h1>
+      <p class="birthday-message">Every year brings its own mix of challenges and little wins — and you’ve handled them with more strength than most ever see. Here’s to a new chapter filled with calm days, loud laughter, and moments that remind you how far you’ve come and how much more there is to enjoy.
+
+</p>
+    </div>
+
+    <script>
+      const candle = document.querySelector('.candle');
+      const flame = document.querySelector('.flame');
+      const blackScreen = document.querySelector('.black-screen');
+      let isLit = true;
+
+      function createSmoke() {
+        for(let i = 0; i < 15; i++) {
+          const smoke = document.createElement('div');
+          smoke.className = 'smoke';
+          smoke.style.left = `${flame.offsetLeft + Math.random() * 20 - 10}px`;
+          smoke.style.top = `${flame.offsetTop}px`;
+          smoke.style.width = `${Math.random() * 5 + 5}px`;
+          smoke.style.height = smoke.style.width;
+          document.body.appendChild(smoke);
+          setTimeout(() => smoke.remove(), 3000);
+        }
+      }
+
+      function blowOutCandle() {
+        if(!isLit) return;
+        isLit = false;
+        
+        flame.classList.add('extinguish');
+        createSmoke();
+        
+        setTimeout(() => {
+          blackScreen.classList.add('active');
+          document.querySelector('.container').style.display = 'none';
+        }, 800);
+      }
+
+      candle.addEventListener('click', blowOutCandle);
+      candle.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        blowOutCandle();
+      });
+    </script>
+  </body>
+</html>
